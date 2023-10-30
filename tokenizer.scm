@@ -67,7 +67,7 @@
           (reverse sexps)
           (loop (cons sexp sexps)))))))
 
-(define (parse* port)
+(define (parse-param** port)
   (let ((input-port port))
     (let loop ((sexps '()))
       (let ((sexp (read input-port)))
@@ -75,7 +75,7 @@
          ((eof-object? sexp)
           (let ((exp (car (reverse sexps))))
             (match exp 
-              (((? symbol?) (or (? string?) (? number?) (? symbol?)) ..1)
+              (((? keyword?) (or (? string?) (? number?) (? symbol?)) ..1)
                (let ((op (car exp)) (args (cdr exp)))
                  (cons op (map (lambda (x) 
                                  (cond 
