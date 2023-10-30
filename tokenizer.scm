@@ -1,5 +1,6 @@
 (use-modules (system base lalr))
 (use-modules (rnrs io ports))
+(use-modules (rnrs bytevectors))
 (use-modules (ice-9 match))
 (use-modules (lexer string)
              (lexer keyword)
@@ -27,7 +28,7 @@
      ((is-whitespace? c)
       (read-char port)
       (next-token port)) ; skip white space
-     ((is-capitalized-c-or-w? c)
+     ((char-upper-case? c)
       (return port 'keyword (get-keyword port)))
      ((is-digit? c)
       (let* ((res (get-number-type port))
@@ -57,6 +58,7 @@
 
 (define (make-simple-tokenizer port) (lambda () (next-token port)))
 
+
 (define (parse port)
  (let ((input-port port))
   (let loop ((sexps '()))
@@ -65,12 +67,58 @@
           (reverse sexps)
           (loop (cons sexp sexps)))))))
 
+(define (parse* port)
+  (let ((input-port port))
+    (let loop ((sexps '()))
+      (let ((sexp (read input-port)))
+        (cond 
+         ((eof-object? sexp)
+          (let ((exp (car (reverse sexps))))
+            (match exp 
+              (((? symbol?) (or (? string?) (? number?) (? symbol?)) ..1)
+               (let ((op (car exp)) (args (cdr exp)))
+                 (cons op (map (lambda (x) 
+                                 (cond 
+                                  ((string? x) (list 'string x))
+                                  ((number? x)
+                                   (let* ((p (open-input-string (number->string x)))
+                                          (t (get-number-type p)))
+                                     (list (cadr t) x)))
+                                  (else ;; symbol
+                                   (let* ((p (open-input-string (symbol->string x)))
+                                          (tt (get-number-type p))
+                                          (p' (car tt))
+                                          (t (cadr tt)))
+                                     (list t (cond
+                                              ((eq? t 'fixnum) (get-fixnum p'))
+                                              ((eq? t 'decimal) (get-decimal p'))))))))
+                               args)))))))
+         (else (loop (cons sexp sexps))))))))
+
 (define (comp src e)
   (match src
     (('Close) "close")
     (('When d ... 'Close) d)))
 
-(define (parse-init port) (parse-param port))
+(define (parse-init port) (parse-param* port))
+
+(define (parse-param* port)
+  (let* ((token (next-token port))
+         (category (lexical-token-category token)))
+    ;; Match the opening paren
+    (match category
+      ('lparen
+       (let ((keyword (parse-keyword port)))
+         (let lp ((node (list (string->symbol keyword))))
+           (let* ((token' (next-token port))
+                  (category' (lexical-token-category token'))
+                  (value' (lexical-token-value token')))
+             ;; Match the closing paren
+             (match (list category' value') 
+               (('rparen _) (reverse node))
+               (((or 'string 'fixnum 'decimal) v) 
+                (lp (cons `(,category' ,v) node)))
+               (_ error "Param not terminated")))))))))
 
 (define (parse-param port)
   (let* ((token (next-token port))
