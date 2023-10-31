@@ -58,7 +58,6 @@
 
 (define (make-simple-tokenizer port) (lambda () (next-token port)))
 
-
 (define (parse port)
  (let ((input-port port))
   (let loop ((sexps '()))
@@ -74,23 +73,41 @@
 
 (define (action? sexps)
   (match sexps
-    (((? is-keyword?) (? param?) ..1) #t)
+    (((? is-keyword?) (or (? param?) (? action?)) ..1) #t)
     (_ #f)))
 
-(define (parse-action** port)
-  (let loop ((sexps '()))
-    (let ((sexp (read port)))
-      (cond
-       ((eof-object? sexp)
-        (let ((exp (car (reverse sexps))))
-          (match exp
-            ((? action?)
-             (match exp
-               ((op args ..1) (cons op (map get-param args))))
-             )
-            ;; (((? is-keyword?) (? param?) ..1) #t)
-            (_ #f))))
-       (else (loop (cons sexp sexps)))))))
+(define (case? sexps)
+  (match sexps
+    (((? is-keyword?) ((? is-keyword?) (or (? action?) (? case?)) ..1)) #t)
+    (_ #f)))
+
+(define (parse-case** port) (get-case (parse port)))
+(define (parse-action** port) (get-action (car (parse port))))
+(define (parse-param** port) (get-param (car (parse port))))
+
+(define (get-case sexp)
+  (match sexp
+    ((? case?)
+     (match sexp
+       ((_ (op args ..1))
+        (cons op (map (lambda (arg)
+                        (match arg
+                          ((? action?) (get-action arg))
+                          ((? case?) (get-case arg))
+                          (_ (error "action or case expression not satisfied"))))
+                      args)))))))
+
+(define (get-action sexp)
+  (match sexp
+    ((? action?)
+     (match sexp
+       ((op args ..1)
+        (cons op (map (lambda (arg)
+                        (match arg
+                            ((? param?) (get-param arg))
+                            ((? action?) (get-action arg))
+                            (_ (error "param or action expression not satisfied"))))
+                      args)))))))
 
 
 (define (get-param sexp)
@@ -114,17 +131,6 @@
                                     ((eq? t 'decimal) (get-decimal p'))))))))
                      args)))))  
   )
-
-
-(define (parse-param** port)
-  (let ((input-port port))
-    (let loop ((sexps '()))
-      (let ((sexp (read input-port)))
-        (cond 
-         ((eof-object? sexp)
-          (let ((exp (car (reverse sexps))))
-            (get-param exp)))
-         (else (loop (cons sexp sexps))))))))
 
 (define (comp src e)
   (match src
