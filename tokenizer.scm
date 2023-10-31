@@ -67,6 +67,55 @@
           (reverse sexps)
           (loop (cons sexp sexps)))))))
 
+(define (param? sexps)
+  (match sexps
+    (((? is-keyword?) (or (? string?) (? number?) (? symbol?)) ..1) #t)
+    (_ #f)))
+
+(define (action? sexps)
+  (match sexps
+    (((? is-keyword?) (? param?) ..1) #t)
+    (_ #f)))
+
+(define (parse-action** port)
+  (let loop ((sexps '()))
+    (let ((sexp (read port)))
+      (cond
+       ((eof-object? sexp)
+        (let ((exp (car (reverse sexps))))
+          (match exp
+            ((? action?)
+             (match exp
+               ((op args ..1) (cons op (map get-param args))))
+             )
+            ;; (((? is-keyword?) (? param?) ..1) #t)
+            (_ #f))))
+       (else (loop (cons sexp sexps)))))))
+
+
+(define (get-param sexp)
+  (match sexp 
+    ((? param?)
+     (let ((op (car sexp)) (args (cdr sexp)))
+       (cons op (map (lambda (x) 
+                       (cond 
+                        ((string? x) (list 'string x))
+                        ((number? x)
+                         (let* ((p (open-input-string (number->string x)))
+                                (t (get-number-type p)))
+                           (list (cadr t) x)))
+                        (else ;; symbol
+                         (let* ((p (open-input-string (symbol->string x)))
+                                (tt (get-number-type p))
+                                (p' (car tt))
+                                (t (cadr tt)))
+                           (list t (cond
+                                    ((eq? t 'fixnum) (get-fixnum p'))
+                                    ((eq? t 'decimal) (get-decimal p'))))))))
+                     args)))))  
+  )
+
+
 (define (parse-param** port)
   (let ((input-port port))
     (let loop ((sexps '()))
@@ -74,25 +123,7 @@
         (cond 
          ((eof-object? sexp)
           (let ((exp (car (reverse sexps))))
-            (match exp 
-              (((? keyword?) (or (? string?) (? number?) (? symbol?)) ..1)
-               (let ((op (car exp)) (args (cdr exp)))
-                 (cons op (map (lambda (x) 
-                                 (cond 
-                                  ((string? x) (list 'string x))
-                                  ((number? x)
-                                   (let* ((p (open-input-string (number->string x)))
-                                          (t (get-number-type p)))
-                                     (list (cadr t) x)))
-                                  (else ;; symbol
-                                   (let* ((p (open-input-string (symbol->string x)))
-                                          (tt (get-number-type p))
-                                          (p' (car tt))
-                                          (t (cadr tt)))
-                                     (list t (cond
-                                              ((eq? t 'fixnum) (get-fixnum p'))
-                                              ((eq? t 'decimal) (get-decimal p'))))))))
-                               args)))))))
+            (get-param exp)))
          (else (loop (cons sexp sexps))))))))
 
 (define (comp src e)
