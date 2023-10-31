@@ -1,7 +1,7 @@
 (define-module (lexer keyword)
   #:use-module (lexer pred)
   #:export (get-keyword
-            keyword?))
+            is-keyword?))
 
 (define (inner-keyword port acc)
   (let ((c (peek-char port)))
@@ -10,7 +10,7 @@
      ((is-delimiter? c) (return-keyword acc))
      (else (inner-keyword port (cons (read-char port) acc))))))
 
-(define (keyword? s) 
+(define (is-keyword? s) 
   (> (string-length 
       (get-keyword (open-input-string 
                     (cond 
