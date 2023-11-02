@@ -6,6 +6,9 @@
 
 (define (is-underscore? c) (char=? #\_ c))
 (define (is-point? c) (char=? #\. c))
+(define (is-dash? c) (char=? #\- c))
+(define (is-plus? c) (char=? #\+ c))
+(define (is-sign? c) (or (is-dash? c) (is-plus? c)))
 
 (define (inner-fractional port acc1 acc2)
   (let ((c (peek-char port)))
@@ -42,6 +45,9 @@
   (let ((c (peek-char port)))
     (cond
      ((eof-object? c) (return-decimal acc1 acc2))
+     ((is-sign? c)
+      (read-char port)
+      (decimal* port (cons c acc1) acc2))
      ((is-digit? c)
       (read-char port)
       (inner-integer port (cons c acc1) acc2))
