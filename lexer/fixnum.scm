@@ -6,6 +6,9 @@
             is-underscore?))
 
 (define (is-underscore? c) (char=? #\_ c))
+(define (is-dash? c) (char=? #\- c))
+(define (is-plus? c) (char=? #\+ c))
+(define (is-sign? c) (or (is-dash? c) (is-plus? c)))
 (define (is-zero? c) (char=? #\0 c))
 (define (is-x? c) (char=? #\x c))
 (define (is-point? c) (char=? #\. c))
@@ -37,13 +40,21 @@
   (let ((c (peek-char port)))
     (cond
      ((eof-object? c) (return-fixnum acc))
+     ((is-sign? c)
+      (read-char port)
+      (fixnum* port (cons c acc)))
      ((is-zero? c)
       (read-char port)
       (let ((c' (peek-char port)))
         (cond 
          ((is-x? c')
-          (read-char port)
-          (inner-fixnum port (cons #\x (cons #\# acc))))
+          (cond 
+           ((and (not (null? acc)) (is-sign? (car acc)))
+            (read-char port)
+            (fixnum* port '()))
+           (else 
+            (read-char port)
+            (inner-fixnum port (cons #\x (cons #\# acc))))))
          ((is-digit? c')
           (read-char port)
           (inner-fixnum port (cons c' acc))))))
@@ -53,5 +64,8 @@
      (else 
       (read-char port)
       (fixnum* port acc)))))
+
+
+
 
 (define (get-fixnum port) (fixnum* port '()))
