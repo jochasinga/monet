@@ -2,3 +2,4 @@
 *.tex
 lexer.scm
 tests.scm
+*.log

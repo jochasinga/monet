@@ -1,15 +1,8 @@
 (define-module (lexer fixnum)
   #:use-module (lexer pred)
-  #:export (get-fixnum
-            fixnum*
-            is-x?
-            is-underscore?))
+  #:export (get-fixnum))
 
-(define (is-underscore? c) (char=? #\_ c))
-(define (is-zero? c) (char=? #\0 c))
-(define (is-x? c) (char=? #\x c))
-(define (is-point? c) (char=? #\. c))
-
+#|
 (define (inner-hex port acc)
   (let ((c (peek-char port)))
     (cond
@@ -19,6 +12,7 @@
       (read-char port)
       (inner-hex port acc))
      (else (inner-hex port (cons (read-char port) acc))))))
+|#
 
 (define (inner-fixnum port acc)  
   (let ((c (peek-char port)))

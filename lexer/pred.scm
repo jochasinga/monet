@@ -11,7 +11,11 @@
             is-colon?
             is-dash?
             is-plus?
-            is-sign?))
+            is-sign?
+            is-underscore?
+            is-zero?
+            is-x?
+            is-point?))
 
 (define (is-double-quote? c) (equal? #\" c))
 (define (is-backslash? c) (equal? #\\ c))
@@ -32,4 +36,7 @@
 (define (is-plus? c) (char=? #\+ c))
 (define (is-sign? c) (or (is-dash? c) (is-plus? c)))
 
-
+(define (is-underscore? c) (char=? #\_ c))
+(define (is-zero? c) (char=? #\0 c))
+(define (is-x? c) (char=? #\x c))
+(define (is-point? c) (char=? #\. c))
