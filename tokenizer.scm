@@ -8,7 +8,8 @@
              (lexer fixnum)
              (lexer decimal)
              (lexer number)
-             (lexer enclosure))
+             (lexer enclosure)
+             (lexer bool))
 
 (define-syntax-rule (port-source-location port)
   (make-source-location (port-filename port)
@@ -28,9 +29,27 @@
      ((is-whitespace? c)
       (read-char port)
       (next-token port)) ; skip white space
+     ((is-colon? c)
+      (return port 'bool (get-bool port)))
      ((char-upper-case? c)
       (return port 'keyword (get-keyword port)))
-     ((is-digit? c)
+
+     ((is-sign? c)
+      (read-char port)
+      (let ((c' (peek-char port)))
+        (cond 
+         ((is-digit? c') 
+          (let* ((res (get-number-type port))
+                 (port' (car res))
+                 (type (cadr res)))
+            (unread-char c port)
+            (cond 
+             ((eq? type 'fixnum) 
+              (return port' type (get-fixnum port)))
+             ((eq? type 'decimal)
+              (return port' type (get-decimal port)))))))))
+
+     ((is-digit? c) 
       (let* ((res (get-number-type port))
              (port' (car res))
              (type (cadr res)))
@@ -39,9 +58,11 @@
           (return port' type (get-fixnum port)))
          ((eq? type 'decimal)
           (return port' type (get-decimal port)))
-         (else (error "NaN")))))
+         (else (error "NaN")))))     
+     #|
      ((is-op? c)
       (return port (get-op port) #f))
+     |#
      ((is-double-quote? c)
       (return port 'string (get-string port)))
      ((is-lparen? c)
@@ -78,7 +99,13 @@
 
 (define (case? sexps)
   (match sexps
-    (((? is-keyword?) ((? is-keyword?) (or (? action?) (? case?)) ..1)) #t)
+    (('When ('Case (or (? action?) (? case?)) ..1) (? param?) ...) #t)
+    (_ #f)))
+
+(define (actor? sexps)
+  (match sexps
+    ('Close #t)
+    ((? case?) #t)
     (_ #f)))
 
 (define (parse-case** port) (get-case (parse port)))
@@ -89,13 +116,15 @@
   (match sexp
     ((? case?)
      (match sexp
-       ((_ (op args ..1))
-        (cons op (map (lambda (arg)
-                        (match arg
-                          ((? action?) (get-action arg))
-                          ((? case?) (get-case arg))
-                          (_ (error "action or case expression not satisfied"))))
-                      args)))))))
+       ((_ (op args ..1) p ...)
+        (append 
+         (cons op (map (lambda (arg)
+                         (match arg
+                           ((? action?) (get-action arg))
+                           ((? case?) (get-case arg))
+                           (_ (error "action|case|param expression not satisfied"))))
+                       args)) p)
+        )))))
 
 (define (get-action sexp)
   (match sexp

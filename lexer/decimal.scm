@@ -6,9 +6,6 @@
 
 (define (is-underscore? c) (char=? #\_ c))
 (define (is-point? c) (char=? #\. c))
-(define (is-dash? c) (char=? #\- c))
-(define (is-plus? c) (char=? #\+ c))
-(define (is-sign? c) (or (is-dash? c) (is-plus? c)))
 
 (define (inner-fractional port acc1 acc2)
   (let ((c (peek-char port)))

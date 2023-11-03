@@ -6,9 +6,6 @@
             is-underscore?))
 
 (define (is-underscore? c) (char=? #\_ c))
-(define (is-dash? c) (char=? #\- c))
-(define (is-plus? c) (char=? #\+ c))
-(define (is-sign? c) (or (is-dash? c) (is-plus? c)))
 (define (is-zero? c) (char=? #\0 c))
 (define (is-x? c) (char=? #\x c))
 (define (is-point? c) (char=? #\. c))

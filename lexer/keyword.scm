@@ -1,7 +1,10 @@
 (define-module (lexer keyword)
   #:use-module (lexer pred)
   #:export (get-keyword
-            is-keyword?))
+            is-keyword?
+            when?
+            case?
+            close?))
 
 (define (inner-keyword port acc)
   (let ((c (peek-char port)))
@@ -17,6 +20,18 @@
                      ((string? s) s)
                      ((symbol? s) (symbol->string s)))))) 
      0))
+
+(define (keyword=? exp s)
+  (eq? exp
+       (get-keyword
+        (open-input-string
+         (cond
+          ((string? s) s)
+          ((symbol? s) (symbol->string s)))))))
+
+(define (when? s) (keyword=? "When" s))
+(define (case? s) (keyword=? "Case" s))
+(define (close? s) (keyword=? "Close" s))
 
 (define keywords 
   (list "Close" "When" "Case" 
