@@ -1,8 +1,6 @@
 (define-module (lexer bool)
   #:use-module (lexer pred)
-  #:export (get-bool bool?))
-
-(define (bool? s))
+  #:export (get-bool))
 
 (define (inner-bool port acc)
   (let ((c (peek-char port)))
