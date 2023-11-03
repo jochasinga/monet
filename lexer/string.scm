@@ -1,11 +1,6 @@
 (define-module (lexer string)
   #:use-module (lexer pred)
-  #:use-module (ice-9 popen)
-  #:use-module (ice-9 textual-ports)
-  #:export (get-string is-double-quote? is-backslash?))
-
-(define (is-double-quote? c) (equal? #\" c))
-(define (is-backslash? c) (equal? #\\ c))
+  #:export (get-string))
 
 (define (esc port acc)
   (let ((c (peek-char port)))
@@ -23,6 +18,7 @@
   (let ((c (peek-char port)))
     (cond
      ((eof-object? c) (str* port acc))
+     ((is-delimiter? c) (return-str acc))
      ((is-backslash? c)
       (read-char port)
       (let ((c' (read-char port)))
@@ -37,14 +33,13 @@
 
 (define (return-str acc)
   (if (null? acc)
-      ""
+      #f
       (string-join (reverse (map string acc)) "")))
 
 (define (str* port acc)
   (let ((c (peek-char port)))
     (cond
      ((eof-object? c) (return-str acc))
-     ((is-delimiter? c) (return-str acc))
      ((is-backslash? c)
       (let ((c' (read-char port)))
         (cond 

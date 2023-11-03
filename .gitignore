@@ -1,4 +1,3 @@
-*.txt
 *.tex
 lexer.scm
 tests.scm
