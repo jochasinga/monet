@@ -1,11 +1,6 @@
 (define-module (lexer decimal)
   #:use-module (lexer pred)
-  #:export (get-decimal
-            fixnum*
-            is-underscore?))
-
-(define (is-underscore? c) (char=? #\_ c))
-(define (is-point? c) (char=? #\. c))
+  #:export (get-decimal))
 
 (define (inner-fractional port acc1 acc2)
   (let ((c (peek-char port)))
