@@ -1,58 +1,39 @@
 (use-modules (srfi srfi-64)
              (lexer decimal)
-             (ice-9 popen))
+             (ice-9 popen)
+             (ice-9 match))
 
 (test-begin "get-decimal")
 
-(define p1 (open-input-string "20.12"))
-(define p2 (open-input-string "-20.12"))
-(define p3 (open-input-string "+20.12"))
-(define p4 (open-input-string "1_000.32_10"))
-(define p5 (open-input-string "-1_000.32_10"))
-(define p6 (open-input-string "+1_000.32_10"))
-(define p7 (open-input-string "50."))
-(define p8 (open-input-string "-50."))
-(define p9 (open-input-string "+50."))
-(define p10 (open-input-string "  foo bar :t \"baz\" -23_000.43 "))
+(define tt (list
+            '("20.12" 20.12 "test-unsigned")
+            '("-20.12" -20.12 "test-negative")
+            '("+20.12" 20.12 "test-positive")
+            '("1_000.32_10" 1000.321 "test-unsigned-underscored")
+            '("-1_000.32_10" -1000.321 "test-negative-underscored")
+            '("+100_0.3_2_1_0" 1000.321 "test-positive-underscored")
+            '("50." 50.0 "test-unsigned-implicit-fractional")
+            '("-50." -50.0 "test-negative-implicit-fractional")
+            '("+50." 50.0 "test-positive-implicit-fractional")
+            '("  foo bar :t \"baz\" -23_000.43 " -23000.43 "test-mixed-tokens")
+            '(":t foo bar" #f "test-none")))
 
-(test-equal "test-unsigned" 
-  20.12
-  (get-decimal p1))
+(define (test-with str exp name)
+  (call-with-input-string str 
+    (lambda (p)
+      (test-equal name
+        exp
+        (get-decimal p)))))
 
-(test-equal "test-negative"
-  -20.12
-  (get-decimal p2))
 
-(test-equal "test-positive"
-  20.12
-  (get-decimal p3))
+(define (run-test tt)
+  (cond
+   ((null? tt) #t)
+   (else
+    (match (car tt)
+      ((s e n) (test-with s e n)))
+    (run-test (cdr tt)))))
 
-(test-equal "test-unsigned-underscored"
-  1000.321
-  (get-decimal p4))
-
-(test-equal "test-negative-underscored"
-  -1000.321
-  (get-decimal p5))
-
-(test-equal "test-positive-underscored"
-  1000.321
-  (get-decimal p6))
-
-(test-equal "test-implicit-fractional"
-  50.0
-  (get-decimal p7))
-
-(test-equal "test-negative-implicit-fractional"
-  -50.0
-  (get-decimal p8))
-
-(test-equal "test-positive-implicit-fractional"
-  50.0
-  (get-decimal p9))
-
-(test-equal "test-mixed"
-  -23000.43
-  (get-decimal p10))
+(run-test tt)
 
 (test-end "get-decimal")

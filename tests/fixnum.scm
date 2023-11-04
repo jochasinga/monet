@@ -1,61 +1,39 @@
 (use-modules (srfi srfi-64)
              (lexer fixnum)
-             (ice-9 popen))
-
+             (ice-9 popen)
+             (ice-9 match))
 
 (test-begin "get-fixnum")
-(define p1 (open-input-string "2000"))
-(define p2 (open-input-string "-2000"))
-(define p3 (open-input-string "+2000"))
-(define p4 (open-input-string "1_000_000"))
-(define p5 (open-input-string "-1_000_000"))
-(define p6 (open-input-string "+1_000_000"))
-(define p7 (open-input-string "0xff"))
-(define p8 (open-input-string "-0xff"))
-(define p9 (open-input-string "+0xff"))
-(define p10 (open-input-string "  foo bar :t \"baz\" -23_000 "))
 
-(test-equal "test-unsigned" 
-            2000
-            (get-fixnum p1))
+(define tt (list
+            '("2000" 2000 "test-unsigned")
+            '("-2000" -2000 "test-negative")
+            '("+2000" 2000 "test-positive")
+            '("1_000_000" 1000000 "test-unsigned-underscored")
+            '("-1_000_000" -1000000 "test-negative-underscored")
+            '("+1_000_000" 1000000 "test-positive-underscored")
+            '("0xff" 255 "test-unsigned-hex")
+            '("-0xff" #f "test-negative-hex")
+            '("+0xff" #f "test-negative-hex")
+            '("  foo bar :t \"baz\" -23_000 " -23000 "test-mixed-tokens")))
 
-(test-equal "test-negative"
-            -2000
-            (get-fixnum p2))
+(define (test-with str expect name)
+  (call-with-input-string str
+    (lambda (p)
+      (test-equal name
+        expect
+        (get-fixnum p)))))
 
-(test-equal "test-positive"
-            2000
-            (get-fixnum p3))
+(define (run-test tt)
+  (cond
+   ((null? tt) #t)
+   (else
+    (match (car tt)
+      ((s e n) (test-with s e n)))
+    (run-test (cdr tt)))))
 
-(test-equal "test-unsigned-underscored"
-            1000000
-            (get-fixnum p4))
-
-(test-equal "test-negative-underscored"
-            -1000000
-            (get-fixnum p5))
-
-(test-equal "test-positive-underscored"
-            1000000
-            (get-fixnum p6))
-
-(test-equal "test-unsigned-hex"
-            255
-            (get-fixnum p7))
-
-(test-equal "test-negative-hex"
-            #f
-            (get-fixnum p8))
-
-(test-equal "test-positive-hex"
-            #f
-            (get-fixnum p9))
-
-(test-equal "test-mixed"
-            -23000
-            (get-fixnum p10))
+(run-test tt)
 
 (test-end "get-fixnum")
-
 
 

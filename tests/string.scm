@@ -1,41 +1,37 @@
 (use-modules (srfi srfi-64)
              (lexer string)
-             (ice-9 popen))
+             (ice-9 popen)
+             (ice-9 match))
 
 
 (test-begin "get-string")
 
-(define p1 (open-input-string "\"foo\""))
-(define p2 (open-input-string ":t"))
-(define p3 (open-input-file "tests/escaped.txt"))
-(define p4 (open-input-string "  foo bar :t \"baz\" -23_000 "))
-(define p5 (open-input-file "tests/mix-escaped.txt"))
 
-(test-equal "test-string" 
-  "foo"
-  (get-string p1))
+(define tt (list
+            '("\"foo\"" "foo" "test-string" #f)
+            '(":t" #f "test-bool" #f)
+            '("  foo bar :t \"baz\" 23000 " "baz" "test-mixed" #f)
+            '("tests/escaped.txt" "\"foo\"" "test-escaped" #t)
+            '("tests/mix-escaped.txt" "\"foo\"" "test-mix-escaped" #t)))
 
-(test-equal "test-bool"
-  #f
-  (get-string p2))
+(define (test-with str expect name file?)
+  (let ((proc (lambda (p) 
+                (test-equal name 
+                  expect 
+                  (get-string p)))))
+    (if file?
+        (call-with-input-file str proc)
+        (call-with-input-string str proc))))
 
-(test-equal "test-escaped"
-  "\"foo\""
-  (get-string p3))
+(define (run-test tt)
+  (cond
+   ((null? tt) #t)
+   (else
+    (match (car tt)
+      ((s e n f?) (test-with s e n f?)))
+    (run-test (cdr tt)))))
 
-(test-equal "test-mixed"
-  "baz"
-  (get-string p4))
-
-(test-equal "test-mix-escaped"
-  "\"foo\""
-  (get-string p5))
-
-(close-port p1)
-(close-port p2)
-(close-port p3)
-(close-port p4)
-(close-port p5)
+(run-test tt)
 
 (test-end "get-string")
 
