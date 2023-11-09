@@ -95,7 +95,8 @@
 (define (expr? sexps)
   (match sexps
     ((? term?) #t)
-    (( (or (? term?) (? expr?)) (? is-op?) (or (? term?) (? expr?)) )  #t)
+    (((or (? term?) (? expr?)) (? is-op?) (or (? term?) (? expr?))) #t)
+    (( (? expr?) ) #t)
     (_ #f)))
 
 (define (! x)
@@ -104,6 +105,7 @@
 ;; Evaluate an arithmetic expression
 (define (get-expr sexp)
   (match sexp
+    (( (? expr? e) ) (get-expr e))
     ((? term? t) t)
     ((? expr? e) 
      (match e
