@@ -87,6 +87,30 @@
           (reverse sexps)
           (loop (cons sexp sexps)))))))
 
+(define (term? sexps)
+  (match sexps
+    ((or (? string?) (? number?) (? symbol?)) #t)
+    (_ #f)))
+
+(define (expr? sexps)
+  (match sexps
+    ((? term?) #t)
+    (( (or (? term?) (? expr?)) (? is-op?) (or (? term?) (? expr?)) )  #t)
+    (_ #f)))
+
+(define (! x)
+  (eval x (interaction-environment)))
+
+;; Evaluate an arithmetic expression
+(define (get-expr sexp)
+  (match sexp
+    ((? term? t) t)
+    ((? expr? e) 
+     (match e
+       ((lhs op rhs) 
+        ((! op) (get-expr lhs) (get-expr rhs)))))
+    (_ (error "not an expression"))))
+
 (define (param? sexps)
   (match sexps
     (((? is-keyword?) (or (? string?) (? number?) (? symbol?)) ..1) #t)
@@ -138,7 +162,6 @@
                             (_ (error "param or action expression not satisfied"))))
                       args)))))))
 
-
 (define (get-param sexp)
   (match sexp 
     ((? param?)
@@ -185,6 +208,30 @@
                (((or 'string 'fixnum 'decimal) v) 
                 (lp (cons `(,category' ,v) node)))
                (_ error "Param not terminated")))))))))
+
+#|
+(define (parse-expr port) 
+  (let* ((tok (next-token port))
+         (cat (lexical-token-category tok))
+         (val (lexical-token-value tok))
+         (p (list cat val)))
+    (match p
+      (('lparen _) 
+       (let* ((v (parse-expr port))
+              (tok' (next-token port))
+              (cat' (lexical-token-category tok')))
+         (if (eq? cat' 'rparen)
+             (display "Expression closed out")
+             (error "Expression not terminated"))))
+      (('add _) ())
+      (('minus _) ())
+      (('times _) ())
+      (('fslash _) ())
+      (('fixnum _)
+       )
+      (('decimal _) ())
+      (('string _) ())))
+|#
 
 (define (parse-param port)
   (let* ((token (next-token port))

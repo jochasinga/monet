@@ -25,7 +25,13 @@
   (char-set-contains? char-set:digit c))
 (define (is-number? c) 
   (char-set-contains? char-set:hex-digit c))
-(define (is-op? c) (string-contains "#-*/" (string c)))
+(define (is-op? c) 
+  (string-contains "+-*/" 
+                   (cond
+                    ((char? c) (string c))
+                    ((string? c) c)
+                    ((symbol? c) (symbol->string c)))))
+
 (define (is-lparen? c) (char=? #\( c))
 (define (is-rparen? c) (char=? #\) c))
 (define (is-delimiter? c)
