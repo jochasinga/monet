@@ -39,9 +39,15 @@
 (define (is-lsqbracket? c) (char=? #\[ c))
 (define (is-rsqbracket? c) (char=? #\]))
 
-
+#|
 (define (is-delimiter? c)
   (or (eof-object? c) (string-contains " +-*/;)\n" (string c))))
+|#
+
+(define (is-delimiter? c)
+  (or (eof-object? c) (string-contains " ;)\n" (string c))))
+
+
 (define (is-colon? c) (char=? #\: c))
 
 (define (is-dash? c) (char=? #\- c))

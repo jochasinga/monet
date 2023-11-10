@@ -3,3 +3,4 @@ test:
 	guile -L . tests/decimal.scm
 	guile -L . tests/string.scm
 	guile -L . tests/bool.scm
+	guile -L . tests/number.scm
