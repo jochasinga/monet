@@ -3,16 +3,7 @@
    #:export (get-lparen
              get-rparen
              get-lsqbracket
-             get-rsqbracket
-             is-lparen?
-             is-rparen?
-             is-lsqbracket?
-             is-rsqbracket?))
-
-(define (is-lparen? c) (char=? #\( c))
-(define (is-rparen? c) (char=? #\) c))
-(define (is-lsqbracket? c) (char=? #\[ c))
-(define (is-rsqbracket? c) (char=? #\] c)) 
+             get-rsqbracket))
 
 (define (get-lparen port)
   (let lp ((c (peek-char port)))

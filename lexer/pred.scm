@@ -7,6 +7,8 @@
             is-op?
             is-lparen?
             is-rparen?
+            is-lsqbracket?
+            is-rsqbracket?
             is-delimiter?
             is-colon?
             is-dash?
@@ -34,6 +36,10 @@
 
 (define (is-lparen? c) (char=? #\( c))
 (define (is-rparen? c) (char=? #\) c))
+(define (is-lsqbracket? c) (char=? #\[ c))
+(define (is-rsqbracket? c) (char=? #\]))
+
+
 (define (is-delimiter? c)
   (or (eof-object? c) (string-contains " +-*/;)\n" (string c))))
 (define (is-colon? c) (char=? #\: c))
