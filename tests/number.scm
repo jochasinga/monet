@@ -12,7 +12,11 @@
                    '(0xff #t "test-f4")
                    '(0.01 #f "test-f5")
                    '(0_000_000.01 #f "test-f6")
-                   '(+2000 #t "test-f7")))
+                   '(+2000 #t "test-f7")
+                   '(0x #f "test-f8")
+                   '(a #f "test-f9")
+                   '(xf #f "test-f10")
+                   '(0xf #t "test-f11")))
 
 (define tt-decimal (list
                     '(200. #t "test-d1")
@@ -30,7 +34,10 @@
                             '("0xff" fixnum "test-t4")
                             '("0.0_100_40" decimal "test-t5")
                             '("0_000_000.01" decimal "test-t6")
-                            '("+200.0" decimal "test-t7")))
+                            '("+200.0" decimal "test-t7")
+                            '("0x" nan "test-t8")
+                            '("a" nan "test-t9")
+                            '("ff" nan "test-t10")))
 
 
 (define (test-with e expect name proc)
