@@ -1,6 +1,6 @@
 (define-module (lexer decimal)
   #:use-module (lexer pred)
-  #:export (get-decimal))
+  #:export (get-decimal decimal->number))
 
 (define (inner-fractional port acc1 acc2)
   (let ((c (peek-char port)))
@@ -48,3 +48,10 @@
       (decimal* port acc1 acc2)))))
 
 (define (get-decimal port) (decimal* port '() '()))
+
+(define (decimal->number e)
+   (let ((ex (cond
+              ((string? e) e)
+              ((number? e) (number->string e))
+              ((symbol? e) (symbol->string e)))))
+     (call-with-input-string ex (lambda (p) (get-decimal p)))))
