@@ -1,6 +1,6 @@
 (define-module (lexer fixnum)
   #:use-module (lexer pred)
-  #:export (get-fixnum))
+  #:export (get-fixnum fixnum->number))
 
 #|
 (define (inner-hex port acc)
@@ -56,7 +56,11 @@
       (read-char port)
       (fixnum* port acc)))))
 
-
-
-
 (define (get-fixnum port) (fixnum* port '()))
+
+(define (fixnum->number e)
+  (let ((ex (cond
+             ((string? e) e)
+             ((number? e) (number->string e))
+             ((symbol? e) (symbol->string e)))))
+    (call-with-input-string ex (lambda (p) (get-fixnum p)))))
