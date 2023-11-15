@@ -1,6 +1,7 @@
 (define-module (lexer bool)
   #:use-module (lexer pred)
-  #:export (get-bool))
+  #:use-module (ice-9 match)
+  #:export (get-bool bool? bool->boolean))
 
 (define (inner-bool port acc)
   (let ((c (peek-char port)))
@@ -17,6 +18,24 @@
      (else 
       (read-char port)
       (bool* port acc)))))
+
+(define (bool? s)
+  (cond
+   ((symbol? s) (or (eq? s ':f) (eq? s ':t)))
+   ((string? s) (or (string=? s ":f") (string=? s ":t")))
+   (else #f)))
+
+(define (bool->boolean e)
+  (cond
+   ((symbol? e) (match e
+                  (':f #f)
+                  (':t #t)
+                  (_ (error "not a bool"))))
+   ((string? e) (match e
+                  (":f" #f)
+                  (":t" #t)
+                  (_ (error "not a bool"))))))
+
 
 (define (return-bool acc)
   (if (null? acc)
