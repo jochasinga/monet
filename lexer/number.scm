@@ -27,6 +27,7 @@
 
 (define (fixnum? e)
   (let* ((ex (cond
+             ((string? e) e)
              ((number? e) (number->string e))
              ((symbol? e) (symbol->string e))))
          (p (call-with-input-string ex (lambda (p) (number* p)))))    
@@ -36,6 +37,7 @@
 
 (define (decimal? e)
   (let* ((ex (cond
+              ((string? e) e)
               ((number? e) (number->string e))
               ((symbol? e) (symbol->string e))))
          (p (call-with-input-string ex (lambda (p) (number* p)))))    
