@@ -33,7 +33,6 @@
       (return port 'bool (get-bool port)))
      ((char-upper-case? c)
       (return port 'keyword (get-keyword port)))
-
      ((is-sign? c)
       (read-char port)
       (let ((c' (peek-char port)))
@@ -87,15 +86,17 @@
           (reverse sexps)
           (loop (cons sexp sexps)))))))
 
-(define (term? sexps)
-  (match sexps
-    ((or (? string?) (? number?) (? symbol?)) #t)
+(define (term? sexp)
+  (match sexp
+    (( (? term? inner) ) (term? inner))
+    ((_ ...) #f)
+    ((or (? bool?) (? fixnum?) (? decimal?) (? string?)) #t)
     (_ #f)))
 
 (define (expr? sexps)
   (match sexps
     ((? term?) #t)
-    (((or (? term?) (? expr?)) (? is-op?) (or (? term?) (? expr?))) #t)
+    (( (or (? term?) (? expr?)) (? is-op?) (or (? term?) (? expr?)) ) #t)
     (( (? expr?) ) #t)
     (_ #f)))
 
@@ -106,10 +107,10 @@
 (define (get-expr sexp)
   (match sexp
     (( (? expr? e) ) (get-expr e))
-    ((? term? t) t)
-    ((? expr? e) 
+    ((? term? t) (fixnum->number t))
+    ((? expr? e)
      (match e
-       ((lhs op rhs) 
+       ((lhs op rhs)
         ((! op) (get-expr lhs) (get-expr rhs)))))
     (_ (error "not an expression"))))
 
@@ -134,6 +135,7 @@
     ((? case?) #t)
     (_ #f)))
 
+(define (parse-expr** port) (get-expr (parse port)))
 (define (parse-case** port) (get-case (parse port)))
 (define (parse-action** port) (get-action (car (parse port))))
 (define (parse-param** port) (get-param (car (parse port))))
