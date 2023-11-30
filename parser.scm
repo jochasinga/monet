@@ -1,3 +1,22 @@
+(define-module (parser)
+  #:use-module (system base lalr)
+  #:use-module (rnrs io ports)
+  #:use-module (rnrs bytevectors)
+  #:use-module (ice-9 match)
+  #:use-module (lexer string)
+  #:use-module (lexer keyword)
+  #:use-module (lexer pred)
+  #:use-module (lexer fixnum)
+  #:use-module (lexer decimal)
+  #:use-module (lexer number)
+  #:use-module (lexer enclosure)
+  #:use-module (lexer bool)
+  #:export (term? 
+            expr? 
+            get-expr
+            parse))
+
+#|
 (use-modules (system base lalr))
 (use-modules (rnrs io ports))
 (use-modules (rnrs bytevectors))
@@ -10,6 +29,7 @@
              (lexer number)
              (lexer enclosure)
              (lexer bool))
+|#
 
 (define-syntax-rule (port-source-location port)
   (make-source-location (port-filename port)
@@ -107,11 +127,20 @@
 (define (get-expr sexp)
   (match sexp
     (( (? expr? e) ) (get-expr e))
-    ((? term? t) (fixnum->number t))
+    ((? term? t) 
+     (cond
+      ((fixnum? t) (fixnum->number t))
+      ((decimal? t) (decimal->number t))
+      ((bool? t) (bool->boolean t))
+      ((string? t) t)))
     ((? expr? e)
      (match e
        ((lhs op rhs)
-        ((! op) (get-expr lhs) (get-expr rhs)))))
+        (cond
+         ((and (string? lhs) (eq? op '+)) (string-append (get-expr lhs) (get-expr rhs)))
+         ((and (or (fixnum? lhs) (decimal? lhs)) (is-op? op))
+          ((! op) (get-expr lhs) (get-expr rhs)))
+         (else (error "not a valid expression"))))))
     (_ (error "not an expression"))))
 
 (define (param? sexps)
