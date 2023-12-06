@@ -27,6 +27,17 @@
                     '(0_000_000.01 #t "test-d6")
                     '(+200.0 #t "test-d7")))
 
+(define tt-number (list
+                   '(200. #t "test-imp-decimal")
+                   '(-200.01 #t "test-neg-decimal")
+                   '(0xff #t "test-hex-fixnum")
+                   '(1_000_000 #t "test-underscored-fixnum")
+                   '(1_240. #t "test-underscored-decimal")
+                   '(+200.0 #t "test-positive-decimal")
+                   '(0xf #t "test-truncated-hex-fixnum")
+                   '(0x #f "test-nan")
+                   '(af #f "test-alphabet")))
+
 (define tt-get-number-type (list
                             '("200." decimal "test-t1")
                             '("-200" fixnum "test-t2")
@@ -66,6 +77,10 @@
 (run-test tt-fixnum fixnum?)
 
 (run-test tt-decimal decimal?)
+
+(run-test tt-number num?)
+
+(run-test tt-number num?)
 
 (run-string-test tt-get-number-type)
 

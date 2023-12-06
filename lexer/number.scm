@@ -7,7 +7,8 @@
             unread-all-chars
             number*
             fixnum?
-            decimal?))
+            decimal?
+            num?))
 
 (define (is-underscore? c) (char=? #\_ c))
 (define (is-point? c) (char=? #\. c))
@@ -44,6 +45,8 @@
     (match p
       ((_ 'decimal) #t)
       (_ #f))))
+
+(define (num? e) (or (fixnum? e) (decimal? e)))
 
 (define (number* port)
   (let lp ((c (peek-char port))
