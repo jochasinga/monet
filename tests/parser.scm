@@ -15,8 +15,27 @@
                '("(12_000_000)" #t "test-wrapped-underscored-fixnum")
                '("(1.20)" #t "test-wrapped-decimal")
                '("(1_000.1_000_001)" #t "test-wrapped-underscored-decimal")
-               '("(\"foo\")" #t "test-wrapped-string")))
+               '("(\"foo\")" #t "test-wrapped-string")
+               '("1 + 1" #f "test-addition-expr")
+               '("\"hello \" + \"world\"" #f "test-string-append-expr")
+               '("1_000_000 / 5" #f "test-division-expr")
+               '("(10 * (2 + 3))" #f "test-double-wrapped-arithmetic-expr")))
 
+(define exprs (list
+               '("(1 + 2)" #t "test-addition")
+               '("(3 - 2)" #t "test-subtraction")
+               '("(10 / 5)" #t "test-division")
+               '("(3 * 5)" #t "test-multiplication")
+               '("(1 + 3 * 2)" #t "test-continuous-arith")
+               '("(1 + (3 * 20_000))" #t "test-complex-arith-1")
+               '("((120_000_000 / 1000) * 2)" #t "test-complex-arith-2")
+               '("(1000)" #t "test-parenwrapped-term")
+               '("0xff" #t "test-hex-fixnum-term")
+               '("1 + 2" #f "test-addition-without-parens")
+               '("3 - 2" #f "test-subtraction-without-parens")
+               '("10 / 5" #f "test-division-without-parens")
+               '("3 * 5" #f "test-multiplication-without-parens")
+               '("12 * (1 / 4)" #f "test-complex-arith-2")))
 
 (define (test-with-string str expect name proc)
   (call-with-input-string str
@@ -48,6 +67,7 @@
     (run-test (cdr tt) proc))))
 
 (run-string-test terms (lambda (e) (term? (parse e))))
+(run-string-test exprs (lambda (e) (expr? (parse e))))
 ;(run-test tt2 bool?)
 ;(run-test tt3 bool->boolean)
 

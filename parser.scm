@@ -14,22 +14,9 @@
   #:export (term? 
             expr? 
             get-expr
-            parse))
-
-#|
-(use-modules (system base lalr))
-(use-modules (rnrs io ports))
-(use-modules (rnrs bytevectors))
-(use-modules (ice-9 match))
-(use-modules (lexer string)
-             (lexer keyword)
-             (lexer pred)
-             (lexer fixnum)
-             (lexer decimal)
-             (lexer number)
-             (lexer enclosure)
-             (lexer bool))
-|#
+            parse
+            match-interspersed
+            next-token))
 
 (define-syntax-rule (port-source-location port)
   (make-source-location (port-filename port)
@@ -98,6 +85,20 @@
 
 (define (make-simple-tokenizer port) (lambda () (next-token port)))
 
+(define (match-interspersed lst)
+  (cond
+   ((null? lst) #f)
+   (else
+    (let loop ((acc lst) (flag #t))
+      (cond
+       ((null? acc) flag)
+       ((and (= (length acc) 1) (expr? (car acc))) flag)
+       (else 
+        (match acc
+          (((? expr? lhs) (? is-op? op) rest ...)
+           (loop rest flag))
+          (else #f))))))))
+
 (define (parse port)
  (let ((input-port port))
   (let loop ((sexps '()))
@@ -116,9 +117,10 @@
 (define (expr? sexps)
   (match sexps
     ((? term?) #t)
-    (( (or (? term?) (? expr?)) (? is-op?) (or (? term?) (? expr?)) ) #t)
-    (( (? expr?) ) #t)
-    (_ #f)))
+    ;(((or (? term?) (? expr?)) (? is-op?) (or (? term?) (? expr?))) #t)
+    (((? expr?) (? is-op?) (? expr?)) #t)
+    (( (? expr? inner) ) (expr? inner))
+    (_ (match-interspersed sexps))))
 
 (define (! x)
   (eval x (interaction-environment)))
